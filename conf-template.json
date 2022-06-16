@@ -1,0 +1,12 @@
+{
+    "sshkey": "/ed25519/key/file/path",
+    "hosts":[
+        { "name": "xx", "address": "z97.jiapeng.me", "user": "username", "port": 22 },
+        {}
+    ],
+    "miners":[
+        { "id": "000", "pubkey": "0xa123......", "host": "hostname_in_host_list", "container": "streamr", "command": "auto" },
+        {}
+    ],
+    "dingtalkkey": ""
+}
