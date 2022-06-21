@@ -6,10 +6,7 @@ import traceback
 
 import time, datetime, pytz
 
-
-
 import paramiko
-
 
 def save_json_file(j, file):
     f = open(file, "w")
