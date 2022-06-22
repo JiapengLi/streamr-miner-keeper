@@ -22,7 +22,21 @@ def load_json_file(file):
 class StreamrApi:
     def __init__(self, proxy = False):
         self.url = os.environ.get('STREAMR_API_URL', "https://brubeck1.streamr.network:3013")
-        print(f"url: {self.url}")
+        self.graphurl = os.environ.get('STREAMR_API_GRAPH_URL', "https://api.thegraph.com/subgraphs/name/streamr-dev/data-on-polygon")
+
+        # try:
+        #     json_data = {
+        #         'query': '{\n  erc20Transfers(\n    where: {\n      from: "0x3979f7d6b5c5bfa4bcd441b4f35bfa0731ccfaef"\n      to: "' + value.lower() + '"\n      timestamp_gt: "1646065752"\n    }\n  ) {\n    timestamp\n    value\n  }\n}\n',
+        #         }
+
+        #     response = rq.post('https://api.thegraph.com/subgraphs/name/streamr-dev/data-on-polygon', json=json_data)
+        #     json_data = json.loads(response.text)
+        #     for index, data in enumerate(json_data["data"]["erc20Transfers"]):
+        #         paid_data += round(float(json_data["data"]["erc20Transfers"][index]["value"]), 2)
+        #         paid_per_node[key] += round(float(json_data["data"]["erc20Transfers"][index]["value"]), 2)
+
+        print(f"url: {self.url}, {self.graphurl}")
+
         self.proxy = proxy
         self.s = requests.session()
         #self.s.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
@@ -69,6 +83,26 @@ class StreamrApi:
             print(f"{path} get data failed")
         return res
 
+    def query(self, gql=""):
+        ret = self.s.post(self.graphurl, json={"query": gql}).json()
+        return ret
+
+    def received_rewards(self, address):
+        streamrAddress = "0x3979f7d6b5c5bfa4bcd441b4f35bfa0731ccfaef"
+        gql = f'''{{
+    erc20Transfers( where: {{from: "{str.lower(streamrAddress)}", to: "{str.lower(address)}", timestamp_gt: 1640995200 }} ){{
+        value
+        timestamp
+    }}
+}}
+'''
+        ret = self.query(gql)
+        total_rewards = 0
+        for obj in ret['data']['erc20Transfers']:
+            total_rewards += float(obj['value'])
+
+        return total_rewards
+
     def rewards(self, address):
         return self.request(f"datarewards/{address}")
     def stats(self, address):
@@ -92,10 +126,11 @@ class StreamrApi:
     def miner(self, address):
         rewards = self.rewards(address)
         stats = self.stats(address)
+        received_rewards = self.received_rewards(address)
         rewards['STATS'] = stats
         rewards['STATS']['secondsSinceLastClaim'] = 0
         rewards['STATS']['lastClaimTime'] = ""
-
+        rewards['STATS']['receivedRewards'] = received_rewards
         if len(rewards['STATS']['claimedRewardCodes']) > 0:
             last_claim = rewards['STATS']['claimedRewardCodes'][-1]
 
@@ -111,6 +146,7 @@ class StreamrApi:
             rewards['STATS']['lastClaimTime'] = last_claim['claimTime']
 
         return rewards
+
 
 class SSHClient:
     def __init__(self, **host):

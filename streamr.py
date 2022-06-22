@@ -109,6 +109,7 @@ def fetch_miners_info(max_workers = 10):
             }
             if res['DATA']:
                 results[pubkey]['data'] = res['DATA']
+                results[pubkey]['receivedRewards'] = res['STATS']['receivedRewards']
                 results[pubkey]['secondsSinceLastClaim'] = res['STATS']['secondsSinceLastClaim']
                 results[pubkey]['lastClaimTime'] = res['STATS']['lastClaimTime']
     print(json.dumps(results, indent=4))
@@ -117,7 +118,8 @@ def fetch_miners_info(max_workers = 10):
 
 def keeper():
     force_notify = False
-    rewards = 0
+    total_rewards = 0
+    received_rewards = 0
     message = ""
 
     results = fetch_miners_info()
@@ -151,11 +153,17 @@ def keeper():
                     print(e)
             else:
                 print(f"Skip restart device ID{m.name}")
+        urewards = r['data'] - r['receivedRewards']
+        message += f"{sta}, ID{m.name}, {int(r['data']):5d}, {int(r['receivedRewards']):5d}, {int(urewards):4d}, {r['secondsSinceLastClaim']/60/60:.1f}h, {seconds_since_last_fix/60/60:.1f}h\n"
+        total_rewards += r['data']
+        received_rewards += r['receivedRewards']
 
-        message += f"{sta}, ID{m.name}, {int(r['data'])}, {r['secondsSinceLastClaim']/60/60:.1f}h, {seconds_since_last_fix/60/60:.1f}h\n"
-        rewards += r['data']
-
-    message = f"Miner: {len(Miner.select())}\nTotal: {rewards:.1f} DATA\n{message}"
+    message = f'''
+Miner: {len(Miner.select())}
+Total: {total_rewards:.0f} DATA
+Received: {received_rewards:.0f} DATA
+Unclaimed: {total_rewards - received_rewards:.0f} DATA
+{message}'''
     print(message)
 
     try:
@@ -177,6 +185,7 @@ def keeper():
         pass
 
 def test():
+    sapi = StreamrApi()
     pass
 
 if __name__ == '__main__':

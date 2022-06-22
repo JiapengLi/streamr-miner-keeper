@@ -1,6 +1,6 @@
 # Streamr Miner Keeper
 
-Run **Streamr Miner Keeper** periodically to keep your streamr miner node healthy. **STOP MISSING REWARD CLAIM!**  
+Run **Streamr Miner Keeper** periodically to keep your streamr miner node healthy. **STOP MISSING REWARD CLAIM!**
 
 After involved in streamr project, I found that the miner node sometimes stops working after days or weeks running, and a restart can always fix the issue. So it comes to the idea, that you can monitor the node stats, when it stops claiming rewards, trigger docker container  restart command automatically.
 
@@ -40,7 +40,7 @@ Before installation create your own configuration file.
   - `id`: miner name
   - `pubkey`: miner public key
   - `host`: host name in host list, the same as the name in hosts list
-  - `container`: docker container name, use to auto generate miner restart command 
+  - `container`: docker container name, use to auto generate miner restart command
   - `command`: set `auto` to generate `sudo docker restart $container` command
 
 ## Installation
@@ -48,7 +48,7 @@ Before installation create your own configuration file.
 First, install python3 dependencies.
 
 ```
-sudo pip3 install fire paramiko
+sudo pip3 install fire paramiko peewee
 ```
 
 Specify configure file and run `install.sh` to deploy.
