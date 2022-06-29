@@ -20,48 +20,26 @@ def load_json_file(file):
     return res
 
 class StreamrApi:
-    def __init__(self, proxy = False):
+    def __init__(self):
         self.url = os.environ.get('STREAMR_API_URL', "https://brubeck1.streamr.network:3013")
         self.graphurl = os.environ.get('STREAMR_API_GRAPH_URL', "https://api.thegraph.com/subgraphs/name/streamr-dev/data-on-polygon")
-
-        # try:
-        #     json_data = {
-        #         'query': '{\n  erc20Transfers(\n    where: {\n      from: "0x3979f7d6b5c5bfa4bcd441b4f35bfa0731ccfaef"\n      to: "' + value.lower() + '"\n      timestamp_gt: "1646065752"\n    }\n  ) {\n    timestamp\n    value\n  }\n}\n',
-        #         }
-
-        #     response = rq.post('https://api.thegraph.com/subgraphs/name/streamr-dev/data-on-polygon', json=json_data)
-        #     json_data = json.loads(response.text)
-        #     for index, data in enumerate(json_data["data"]["erc20Transfers"]):
-        #         paid_data += round(float(json_data["data"]["erc20Transfers"][index]["value"]), 2)
-        #         paid_per_node[key] += round(float(json_data["data"]["erc20Transfers"][index]["value"]), 2)
-
-        print(f"url: {self.url}, {self.graphurl}")
-
-        self.proxy = proxy
         self.s = requests.session()
-        #self.s.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
-        self.cursors = []
-        self.data = []
-        self.data_len = 0
-        self.data_cnt = 0
 
-    def request(self, path, para={}, new=True):
+    def request(self, path, para=None, new=False):
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
         if new:
             s = requests.session()
         else:
             s = self.s
+
         url = f'{self.url}/{path}'
         res = None
-        cnt = 50
+        cnt = 2
         success = False
         print(f"{url} {para} {new}")
         while cnt > 0:
             try:
-                if para == {}:
-                    res = s.get(url, headers=headers)
-                else:
-                    res = s.get(url, headers=headers, params=para)
+                res = s.get(url, headers=headers, params=para, timeout=60)
                 if res.status_code != 200:
                     try:
                         resp_content = res.json()
@@ -76,7 +54,8 @@ class StreamrApi:
                     success = True
                     break
             except Exception as e:
-                print(f"error {traceback.format_exc()}")
+                # print(f"-----------error {traceback.format_exc()}")
+                print(f"error {path} {e}")
                 res = {}
             cnt -= 1
         if not success:

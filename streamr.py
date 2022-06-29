@@ -142,7 +142,6 @@ def keeper():
                 cmd = m.command
                 if m.command == 'auto':
                     cmd = f"sudo docker restart {m.container}"
-                cmd = 'uname -a'
                 try:
                     h = model_to_dict(Host.get(Host.name == m.host_id))
                     SSHClient(**h).exec_cmd_and_close(cmd)
@@ -203,4 +202,4 @@ if __name__ == '__main__':
         "test": test,
     })
 
-
+    close_db()

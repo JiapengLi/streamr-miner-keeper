@@ -31,3 +31,6 @@ class Miner(BaseModel):
 def create_tables():
     with database:
         database.create_tables([Conf, Host, Miner])
+
+def close_db():
+    database.close()
