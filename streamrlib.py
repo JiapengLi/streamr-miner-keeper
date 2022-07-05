@@ -39,7 +39,7 @@ class StreamrApi:
         print(f"{url} {para} {new}")
         while cnt > 0:
             try:
-                res = s.get(url, headers=headers, params=para, timeout=60)
+                res = s.get(url, headers=headers, params=para, timeout=120)
                 if res.status_code != 200:
                     try:
                         resp_content = res.json()

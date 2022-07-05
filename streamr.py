@@ -106,6 +106,7 @@ def fetch_miners_info(max_workers = 10):
                 "data": 0,
                 "secondsSinceLastClaim": 0,
                 "lastClaimTime": "unknown",
+                "receivedRewards": 0,
             }
             if res['DATA']:
                 results[pubkey]['data'] = res['DATA']
@@ -153,7 +154,7 @@ def keeper():
             else:
                 print(f"Skip restart device ID{m.name}")
         urewards = r['data'] - r['receivedRewards']
-        message += f"{sta}, ID{m.name}, {int(r['data']):5d}, {int(r['receivedRewards']):5d}, {int(urewards):4d}, {r['secondsSinceLastClaim']/60/60:.1f}h, {seconds_since_last_fix/60/60:.1f}h\n"
+        message += f"{sta}, ID{m.name}, {int(r['data']):d}, {int(r['receivedRewards']):d}, {int(urewards):d}, {r['secondsSinceLastClaim']/60/60:.1f}h, {int(seconds_since_last_fix/60/60)}h\n"
         total_rewards += r['data']
         received_rewards += r['receivedRewards']
 

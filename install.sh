@@ -9,11 +9,16 @@ PYTHON=`which python3`
 
 mkdir -p $WORKSPACE
 cp streamr.py streamrlib.py streamrdb.py $WORKSPACE
-cp $CONFFILE $WORKSPACE/conf.json
 
 cd $WORKSPACE
 chown $USER:$USER -R $WORKSPACE
-sudo -u $USER $PYTHON streamr.py cfg2db conf.json
+
+if [ ! -f smk.sqlite3.db ]; then
+    cp $CONFFILE $WORKSPACE/conf.json
+    sudo -u $USER $PYTHON streamr.py cfg2db conf.json
+else
+    echo "db file exits, skip load config.json"
+fi
 
 cat << EOF > /lib/systemd/system/$TARGET_NAME.service
 [Unit]
