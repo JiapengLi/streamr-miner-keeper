@@ -28,6 +28,7 @@ After=network.target
 [Service]
 WorkingDirectory=$WORKSPACE
 ExecStart=$PYTHON streamr.py keeper
+TimeoutStartSec=8min
 User=$USER
 
 [Install]
