@@ -8,7 +8,7 @@ WORKSPACE=/opt/streamr-miner-keeper
 PYTHON=`which python3`
 
 mkdir -p $WORKSPACE
-cp streamr.py streamrlib.py streamrdb.py $WORKSPACE
+cp streamr.py streamrlib.py streamrdb.py *.py $WORKSPACE
 
 cd $WORKSPACE
 chown $USER:$USER -R $WORKSPACE
