@@ -4,7 +4,14 @@ import fire
 from streamrlib import *
 from streamrdb import *
 
+from collections import OrderedDict
+
 from playhouse.shortcuts import model_to_dict, dict_to_model
+
+from pycoingecko import CoinGeckoAPI
+
+from polygonapi import PolygonApi
+from evmtoken import EVMTOKENS
 
 def host(action, name, address="", user="", port=22, sshkey=""):
     h = {
@@ -123,14 +130,35 @@ def keeper():
     received_rewards = 0
     message = ""
 
+    cg = CoinGeckoAPI()
+    ret = cg.get_price(ids='streamr,matic-network,helium,bitcoin,dimo,', vs_currencies='usd')
+    print(ret)
+    DATA_Price = ret['streamr']['usd']
+    MATIC_Price = ret['matic-network']['usd']
+    HNT_Price = ret['helium']['usd']
+    BTC_Price = ret['bitcoin']['usd']
+    DIMO_Price = ret['dimo']['usd']
+
+    papi = PolygonApi()
+    token = "DATA"
+    papi.set_contract(token=EVMTOKENS[token]['address'], abi=EVMTOKENS[token]['abi'])
+
     results = fetch_miners_info()
 
+    totalBalanceMATIC = 0
+    totalBalanceDATA = 0.0
+    message_dict = OrderedDict()
     for m in Miner.select():
         if results.get(m.pubkey, '') == '':
             continue
 
         r = results[m.pubkey]
         sta = "OK"
+
+        matic = papi.balance(m.pubkey)
+        balance = papi.token_balance(m.pubkey)
+        totalBalanceMATIC += matic
+        totalBalanceDATA += balance
 
         seconds_since_last_fix = 0
         if m.fixtime != 0:
@@ -154,14 +182,27 @@ def keeper():
             else:
                 print(f"Skip restart device ID{m.name}")
         urewards = r['data'] - r['receivedRewards']
-        message += f"{sta}, ID{m.name}, {int(r['data']):d}, {int(r['receivedRewards']):d}, {int(urewards):d}, {r['secondsSinceLastClaim']/60/60:.1f}h, {int(seconds_since_last_fix/60/60)}h\n"
+        msg = f"{sta}, ID{m.name}, {int(r['data']):d}, {int(r['receivedRewards']):d}, {int(urewards):d}, {r['secondsSinceLastClaim']/60/60:.1f}h, {int(seconds_since_last_fix/60/60)}h\n"
+        message_dict[f'ID{m.name}'] = msg
         total_rewards += r['data']
         received_rewards += r['receivedRewards']
 
+    for _, v in sorted(message_dict.items()):
+        message += v
+    # print(message_dict)
+
+    rate = received_rewards / (totalBalanceDATA/10**18 - total_rewards)
+
     message = f'''
+BTC Price: {BTC_Price:.0f}U
+DATA Price: {DATA_Price:.6f}U
+HNT Price: {HNT_Price:.2f}U
+DIMO Price: {DIMO_Price:.6f}U
+MATIC Price: {MATIC_Price:.6f}U
+---
 Miner: {len(Miner.select())}
 Total: {total_rewards:.0f} DATA
-Received: {received_rewards:.0f} DATA
+Received: {received_rewards:.0f} / {totalBalanceDATA/10**18/1000:.0f}K DATA ({totalBalanceDATA / 10**18 * DATA_Price:.0f}U {rate * 100:.1f}%)
 Unclaimed: {total_rewards - received_rewards:.0f} DATA
 {message}'''
     print(message)
